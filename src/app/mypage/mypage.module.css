@@ -34,7 +34,7 @@
 
 .buttonGroup {
   display: flex;
-  gap: 10px;
+  gap: 5px;
 }
 
 .button {
@@ -51,4 +51,8 @@
   background-color: #111a99;
 }
 
+/* 프로젝트 선택 시, 색상 변화(연한 파란색) */
+.selectedProject {
+  background-color: #e0f7fa; 
+}
 

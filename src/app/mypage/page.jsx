@@ -10,11 +10,11 @@ const MyPage = () => {
   ]);
   const [newTitle, setNewTitle] = useState('');
   const [selectedVisibility, setSelectedVisibility] = useState('private');
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedProjectIds, setSelectedProjectIds] = useState([]);
 
   const handleCreateProject = () => {
     const newProject = {
-      id: projects.length + 1, // Simple ID assignment
+      id: projects.length + 1,
       title: newTitle,
       date: new Date().toISOString().split('T')[0],
       visibility: selectedVisibility
@@ -25,13 +25,13 @@ const MyPage = () => {
   };
 
   const handleDeleteProject = () => {
-    setProjects(projects.filter(project => project.id !== selectedProjectId));
-    setSelectedProjectId(null);
+    setProjects(projects.filter(project => !selectedProjectIds.includes(project.id)));
+    setSelectedProjectIds([]);
   };
 
   const handleModifyProject = () => {
     const updatedProjects = projects.map(project => {
-      if (project.id === selectedProjectId) {
+      if (selectedProjectIds.includes(project.id)) {
         return { ...project, title: newTitle || project.title, visibility: selectedVisibility };
       }
       return project;
@@ -39,7 +39,15 @@ const MyPage = () => {
     setProjects(updatedProjects);
     setNewTitle('');
     setSelectedVisibility('private');
-    setSelectedProjectId(null);
+    setSelectedProjectIds([]);
+  };
+
+  const toggleProjectSelection = (id) => {
+    setSelectedProjectIds(prevSelectedProjectIds =>
+      prevSelectedProjectIds.includes(id)
+        ? prevSelectedProjectIds.filter(prevId => prevId !== id)
+        : [...prevSelectedProjectIds, id]
+    );
   };
 
   return (
@@ -48,7 +56,7 @@ const MyPage = () => {
         <h1>My Projects</h1>
         <input
           type="text"
-          placeholder="Project title"
+          placeholder="제목을 입력하세요"
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
         />
@@ -60,25 +68,32 @@ const MyPage = () => {
           <option value="public">Public</option>
         </select>
         <button className={styles.button} onClick={handleCreateProject}>새 프로젝트</button>
-        <button className={styles.button} onClick={handleModifyProject} disabled={!selectedProjectId}>수정</button>
-        <button className={styles.button} onClick={handleDeleteProject} disabled={!selectedProjectId}>삭제</button>
+        <button className={styles.button} onClick={handleModifyProject} disabled={selectedProjectIds.length === 0}>수정</button>
+        <button className={styles.button} onClick={handleDeleteProject} disabled={selectedProjectIds.length === 0}>삭제</button>
       </div>
       <div className={styles.container}>
-        {projects.map(project => (
-          <div key={project.id} className={styles.post} onClick={() => setSelectedProjectId(project.id)}>
-            <h2>제목: {project.title}</h2>
-            <p>생성 날짜: {project.date}</p>
-            <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
-            <button className={styles.button}>코드 보기</button>
-            <button className={styles.button}>분석 결과 보기</button>
-          </div>
-        ))}
+  {projects.map(project => (
+    <div 
+      key={project.id} 
+      className={`${styles.post} ${selectedProjectIds.includes(project.id) ? styles.selectedProject : ''}`}
+      onClick={() => toggleProjectSelection(project.id)}
+    >
+      <h2>제목: {project.title}</h2>
+      <p>생성 날짜: {project.date}</p>
+      <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
+      <div className={styles.buttonGroup}>
+        <button className={styles.button}>코드 보기</button>
+        <button className={styles.button}>분석 결과 보기</button>
       </div>
+    </div>
+  ))}
+</div>
     </div>
   );
 };
 
 export default MyPage;
+
 
 
 
