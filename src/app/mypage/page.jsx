@@ -83,7 +83,7 @@ const MyPage = () => {
       <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
       <div className={styles.buttonGroup}>
         <button className={styles.button}>코드 보기</button>
-        <button className={styles.button}>분석 결과 보기</button>
+        <button className={styles.button}>결과 보기</button>
       </div>
     </div>
   ))}
