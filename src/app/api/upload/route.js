@@ -44,7 +44,7 @@ export async function POST(req, res) {
           }
         );
         resolve(NextResponse.json(response.data));
-        console.log(response.data);
+        // console.log(response.data);
       } catch (error) {
         console.error("외부 API 에러:", error);
         resolve(
