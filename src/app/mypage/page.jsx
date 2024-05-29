@@ -2,8 +2,11 @@
 import React, { useState } from 'react';
 import styles from './mypage.module.css';
 import axios from 'axios';
+import { ClipLoader } from 'react-spinners';
+import { useRouter } from 'next/navigation';
 
 const MyPage = () => {
+  const router = useRouter();
   const [projects, setProjects] = useState([
     { id: 1, title: 'Sample1', date: '2022-04-13', visibility: 'private' },
     { id: 2, title: 'Sample2', date: '2022-04-14', visibility: 'public' },
@@ -13,9 +16,23 @@ const MyPage = () => {
   const [selectedVisibility, setSelectedVisibility] = useState('private');
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  //file은 zip파일만 허용
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedfile = e.target.files[0];
+    const maxSizeInBytes = 100 * 1024 * 1024; // 100MB
+    setFile(selectedfile);
+    //업로드된 파일이 100mb를 넘는 경우
+    if(selectedfile > maxSizeInBytes){
+      setError('최대 파일 크기 100MB');
+      setFile(null);
+    }
+    else {
+      setError('');
+      setFile(selectedfile);
+    }
   };
 
   const handleCreateProject = async () => {
@@ -78,6 +95,12 @@ const MyPage = () => {
     );
   };
 
+  const handleViewAnalysis = (id) => {
+    setLoading(true);
+    router.push(`/mypage/${id}`);
+    setLoading(false);
+  };
+
   return (
     <div>
       <div className={styles.header}>
@@ -95,35 +118,36 @@ const MyPage = () => {
           <option value="private">Private</option>
           <option value="public">Public</option>
         </select>
-        <input type="file" name="file" onChange={handleFileChange} />
+        <input type="file" name="file" accept='.zip' onChange={handleFileChange} />
         {file && <p className={styles.selectedFile}>선택된 파일: {file.name}</p>}
-        <button className={styles.button} onClick={handleCreateProject}>새 프로젝트</button>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <button className={styles.button} onClick={handleCreateProject} disabled={loading}>새 프로젝트(분석 요청)</button>
         <button className={styles.button} onClick={handleModifyProject} disabled={selectedProjectIds.length === 0}>수정</button>
         <button className={styles.button} onClick={handleDeleteProject} disabled={selectedProjectIds.length === 0}>삭제</button>
       </div>
       <div className={styles.container}>
-  {projects.map(project => (
-    <div 
-      key={project.id} 
-      className={`${styles.post} ${selectedProjectIds.includes(project.id) ? styles.selectedProject : ''}`}
-      onClick={() => toggleProjectSelection(project.id)}
-    >
-      <h2>제목: {project.title}</h2>
-      <p>생성 날짜: {project.date}</p>
-      <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
-      <div className={styles.buttonGroup}>
-        <button className={styles.button}>코드 보기</button>
-        <button className={styles.button}>분석 결과 보기</button>
+      {projects.map(project => (
+        <div 
+          key={project.id} 
+          className={`${styles.post} ${selectedProjectIds.includes(project.id) ? styles.selectedProject : ''}`}
+          onClick={() => toggleProjectSelection(project.id)}
+        >
+          <h2>제목: {project.title}</h2>
+          <p>생성 날짜: {project.date}</p>
+          <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
+          <div className={styles.buttonGroup}>
+            <button className={styles.button} onClick={() => handleViewAnalysis(project.id)}>
+                {loading ? <ClipLoader size={24} color="red" /> : '결과 보기' }
+            </button>
+          </div>
+          </div>
+        ))}
       </div>
-    </div>
-  ))}
-</div>
     </div>
   );
 };
 
 export default MyPage;
-
 
 
 
