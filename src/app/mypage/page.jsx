@@ -24,6 +24,7 @@ const MyPage = () => {
   const [error, setError] = useState(null);
   const [responseId, setResponseId] = useState();
 
+
   //file은 zip파일만 허용
   const handleFileChange = (e) => {
     const selectedfile = e.target.files[0];
@@ -72,6 +73,8 @@ const MyPage = () => {
       setResponseId(response.data.id);
     } catch (error) {
       console.error('업로드 실패:', error.response ? error.response.data : error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,6 +123,7 @@ const MyPage = () => {
   //   router.push(`/mypage/${id}`);
 
   // };
+
 
   return (
     <div>
