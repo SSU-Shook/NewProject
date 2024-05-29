@@ -1,27 +1,25 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-// import { ClipLoader } from 'react-spinners';
 import styles from './analysis.module.css';
 
 const AnalysisPage = () => {
-  const { id } = useSearchParams();
+  const { id } = useParams();
   const [analysisResult, setAnalysisResult] = useState(null);
-  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
       const fetchAnalysisResult = async () => {
         try {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/analyze/${id}`);
+          console.log(`Fetching analysis result for file_id=${id}`);
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/analyze/?file_id=${id}`);
+          console.log('Response:', response);
           setAnalysisResult(response.data);
         } catch (error) {
           console.error('분석 결과 가져오기 실패:', error.response ? error.response.data : error.message);
-        } finally {
-          setLoading(false);
         }
       };
       fetchAnalysisResult();
@@ -30,18 +28,13 @@ const AnalysisPage = () => {
 
   return (
     <div className={styles.container}>
-        <h1>Report</h1>
-        {/* {loading ? (
-          <ClipLoader size={24} color="red" />
-        ) : ( */}
-        
-        {analysisResult && (
-          <div className={styles.analysisResult}>
-            <h2>분석 결과</h2>
-            <ReactMarkdown>{analysisResult}</ReactMarkdown>
-          </div>
-        )}
-        
+      <h1>Report</h1>
+      {analysisResult && (
+        <div className={styles.analysisResult}>
+          <h2>분석 결과</h2>
+          <ReactMarkdown>{typeof analysisResult === 'string' ? analysisResult : JSON.stringify(analysisResult)}</ReactMarkdown>
+        </div>
+      )}
     </div>
   );
 };
