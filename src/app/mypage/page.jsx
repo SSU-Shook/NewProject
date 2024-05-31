@@ -4,7 +4,7 @@ import styles from './mypage.module.css';
 import axios from 'axios';
 import { ClipLoader } from 'react-spinners';
 import ReactMarkdown from 'react-markdown';
-// import { useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 
 const MyPage = () => {
   const [projects, setProjects] = useState([]);
@@ -17,7 +17,7 @@ const MyPage = () => {
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [error, setError] = useState(null);
   const [responseId, setResponseId] = useState();
-  // const {data : session} = useSession();
+  const {data: session} = useSession();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -71,18 +71,15 @@ const MyPage = () => {
       console.log('업로드 성공:', response.data);
       newProject.path = response.data.path; // 서버에서 반환된 파일 경로
 
-      // console.log(session);
-
       const projectResponse = await axios.post('/api/project', {
         title: newProject.title,
         path: newProject.path,
-        framework: "javascript", //이부분 schema 바꿔야돼나?
+        framework: "javascript",
         isPublic: newProject.visibility === 'public',
-        authorId: 6, // 여기에 유저 아이디(whitetommy : 6) 수정 필요
+        authorId: session.user.id,
       });
 
       setProjects([...projects, { ...newProject, id: projectResponse.data.id }]);
-
       setNewTitle('');
       setSelectedVisibility('private');
       setFile(null);
