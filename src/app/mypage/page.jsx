@@ -5,6 +5,7 @@ import axios from 'axios';
 import { ClipLoader } from 'react-spinners';
 import ReactMarkdown from 'react-markdown';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const MyPage = () => {
   const [projects, setProjects] = useState([]);
@@ -13,11 +14,11 @@ const MyPage = () => {
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState('');
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [error, setError] = useState(null);
   const [responseId, setResponseId] = useState();
-  const {data: session} = useSession();
+  const {data: session, status} = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -57,6 +58,8 @@ const MyPage = () => {
       visibility: selectedVisibility
     };
 
+    console.log(session.user.id);
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', newTitle);
@@ -83,7 +86,7 @@ const MyPage = () => {
       setNewTitle('');
       setSelectedVisibility('private');
       setFile(null);
-      setResponseId(projectResponse.data.id);
+      setResponseId(response.data.id);
     } catch (error) {
       console.error('업로드 실패:', error.response ? error.response.data : error.message);
     } finally {
@@ -135,14 +138,13 @@ const MyPage = () => {
   };
 
   const handleViewAnalysis = async (id) => {
-    setLoadingAnalysis(true);
+    setLoading(true);
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/analyze/?file_id=${id}`);
-      setAnalysisResult(response.data);
+      router.push(`/mypage/${id}`);
     } catch (error) {
-      console.error('분석 결과 가져오기 실패:', error.response ? error.response.data : error.message);
+      console.error('페이지 이동 실패:', error.message);
     } finally {
-      setLoadingAnalysis(false);
+      setLoading(false);
     }
   };
 
@@ -187,12 +189,6 @@ const MyPage = () => {
                 {loadingAnalysis ? <ClipLoader size={24} color="red" /> : '분석 결과 보기'}
               </button>
             </div>
-            {analysisResult && (
-              <div className={styles.analysisResult}>
-                <h2>분석 결과</h2>
-                <ReactMarkdown>{typeof analysisResult === 'string' ? analysisResult : JSON.stringify(analysisResult)}</ReactMarkdown>
-              </div>
-            )}
           </div>
         ))}
       </div>
