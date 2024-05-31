@@ -1,6 +1,6 @@
 {
   "extends": [
-    "eslint:recommended",
+    "next/babel",
     "next/core-web-vitals"
   ],
   "rules": {
