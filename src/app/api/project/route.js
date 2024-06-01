@@ -41,7 +41,7 @@ export async function POST(req) {
         title,
         path,
         framework,
-        isPublic: visibility === "public",
+        isPublic: visibility === 'true',
         authorId: parseInt(token.sub),
       },
     });
