@@ -6,6 +6,8 @@ import { ClipLoader } from 'react-spinners';
 import ReactMarkdown from 'react-markdown';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 const MyPage = () => {
   const [projects, setProjects] = useState([]);
@@ -14,7 +16,6 @@ const MyPage = () => {
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [error, setError] = useState(null);
   const [responseId, setResponseId] = useState();
   const {data: session, status} = useSession();
@@ -81,13 +82,20 @@ const MyPage = () => {
         authorId: session.user.id,
       });
 
+      console.log("resdata : ", response.data);
+
       setProjects([...projects, { ...newProject, id: projectResponse.data.id }]);
       setNewTitle('');
       setSelectedVisibility('private');
       setFile(null);
       setResponseId(response.data.id);
       setLoading(true);
+
+      console.log("responseId", responseId);
+      console.log("response.data.id", response.data.id);
+
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/analyze/?file_id=${response.data.id}`);
+      console.log(res.data);
     } catch (error) {
       console.error('업로드 실패:', error.response ? error.response.data : error.message);
     } finally {
@@ -182,11 +190,11 @@ const MyPage = () => {
             onClick={() => toggleProjectSelection(project.id)}
           >
             <h2>제목: {project.title}</h2>
-            <p>생성 날짜: {project.date}</p>
+            <p>생성 날짜: {project.updatedAT}</p>
             <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
             <div className={styles.buttonGroup}>
-              <button className={styles.button} onClick={() => handleViewAnalysis(responseId)}>
-                {loading && (project.path==String(responseId)) ? <ClipLoader size={24} color="red" /> : '분석 결과 보기'}
+              <button className={styles.button} onClick={() => handleViewAnalysis(Number(project.path))}>
+                {loading ? <ClipLoader size={24} color="red" /> : '분석 결과 보기'}
               </button>
             </div>
           </div>
