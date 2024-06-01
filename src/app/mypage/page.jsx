@@ -91,7 +91,7 @@ const MyPage = () => {
       console.log("responseId", responseId);
       console.log("response.data.id", response.data.id);
 
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/analyze/?file_id=${response.data.id}`);
+      const res = await axios.get(`/api/analyze/?file_id=${response.data.id}`);
       console.log(res.data);
     } catch (error) {
       console.error('업로드 실패:', error.response ? error.response.data : error.message);
