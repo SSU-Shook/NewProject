@@ -82,7 +82,7 @@ const MyPage = () => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', newTitle);
-    formData.append('visibility', selectedVisibility.toString());
+    formData.append('visibility', selectedVisibility);
 
     try {
       setLoading(true);
@@ -107,8 +107,15 @@ const MyPage = () => {
         },
       });
 
-      const updatedProject = { ...newProject, id: projectResponse.data.id, path: response.data.id };
-      setProjects([...projects, updatedProject]);
+      const updatedProject = {
+        id: projectResponse.data.id,
+        title: newTitle,
+        updatedAt: new Date().toISOString(),
+        isPublic: selectedVisibility, // visibility 대신 isPublic 사용
+        path: response.data.id,
+      };
+      
+      setProjects((prevProjects) => [...prevProjects, updatedProject]);
       setNewTitle('');
       setSelectedVisibility(false);
       setFile(null);
@@ -220,7 +227,7 @@ const MyPage = () => {
           >
             <h2>제목: {project.title}</h2>
             <p>생성 날짜: {format(parseISO(project.updatedAt), 'yyyy/MM/dd HH:mm', { locale: ko })}</p>
-            <p>공개 여부: {project.visibility ? 'Public' : 'Private'}</p>
+            <p>공개 여부: {project.isPublic ? 'Public' : 'Private'}</p>
             <div className={styles.buttonGroup}>
               <button className={styles.button} onClick={() => handleViewAnalysis(Number(project.path))}>
               {loading && String(responseId) === String(project.path) ? <ClipLoader size={24} color="red" /> : '분석 결과 보기'}
