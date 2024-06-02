@@ -22,7 +22,7 @@ const MyPage = () => {
     const fetchProjects = async () => {
       if (!session) return;
       try {
-        const response = await axios.get('/api/project', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/project`, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
@@ -72,10 +72,7 @@ const MyPage = () => {
           Authorization: `Bearer ${session.accessToken}`, 
         },
       });
-      console.log('업로드 성공:', response.data);
-      newProject.id = response.data.id; // 서버에서 반환된 파일 경로
-
-      const projectResponse = await axios.post('/api/project', {
+      const projectResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/project`, {
         title: newProject.title,
         path: String(newProject.id),
         framework: "javascript",
@@ -103,7 +100,7 @@ const MyPage = () => {
   const handleDeleteProject = async () => {
     for (let id of selectedProjectIds) {
       try {
-        await axios.delete(`/api/project/${id}`, {
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/project/${id}`, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
@@ -119,7 +116,7 @@ const MyPage = () => {
   const handleModifyProject = async () => {
     for (let id of selectedProjectIds) {
       try {
-        await axios.put(`/api/project/${id}`, {
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/project/${id}`, {
           title: newTitle || projects.find(project => project.id === id).title,
           isPublic: selectedVisibility === 'public',
         }, {
