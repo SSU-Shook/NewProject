@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import JSZip from 'jszip';
 
 const MyPage = () => {
   const [projects, setProjects] = useState([]);
@@ -24,7 +25,7 @@ const MyPage = () => {
     const fetchProjects = async () => {
       if (!session) return;
       try {
-        const response = await axios.get('/api/project', {
+        const response = await axios.get(`/api/project`, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
@@ -54,17 +55,33 @@ const MyPage = () => {
   }, [responseId]);
   
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     const maxSizeInBytes = 100 * 1024 * 1024; // 100MB
     if (selectedFile.size > maxSizeInBytes) {
       setError('최대 파일 크기 100MB');
       setFile(null);
-    } else {
+      return;
+    }
+
+    try {
+      const zip = await JSZip.loadAsync(selectedFile);
+      const containsJsFile = Object.keys(zip.files).some(filename => filename.endsWith('.js'));
+
+      if (!containsJsFile) {
+        setError('js파일이 포함된 zip파일을 업로드 해주세요.');
+        setFile(null);
+        return;
+      }
+
       setError('');
       setFile(selectedFile);
+    } catch (error) {
+      setError('파일을 처리하는 중 오류가 발생했습니다.');
+      setFile(null);
     }
   };
+
 
   const handleCreateProject = async () => {
     if (!file) {
@@ -93,9 +110,9 @@ const MyPage = () => {
         },
       });
       console.log('업로드 성공:', response.data);
-      newProject.id = response.data.id;
+      newProject.id = response.data.id; // 서버에서 반환된 파일 경로
 
-      const projectResponse = await axios.post('/api/project', {
+      const projectResponse = await axios.post(`/api/project`, {
         title: newProject.title,
         path: String(response.data.id),
         framework: "javascript",
@@ -111,7 +128,7 @@ const MyPage = () => {
         id: projectResponse.data.id,
         title: newTitle,
         updatedAt: new Date().toISOString(),
-        isPublic: selectedVisibility, // visibility 대신 isPublic 사용
+        isPublic: selectedVisibility,
         path: response.data.id,
       };
       
@@ -120,15 +137,10 @@ const MyPage = () => {
       setSelectedVisibility(false);
       setFile(null);
       setResponseId(response.data.id);
-      // setLoading(true);
-      // const res = await axios.get(`/api/analyze/?file_id=${response.data.id}`);
     } catch (error) {
       console.error('업로드 실패:', error.response ? error.response.data : error.message);
       setLoading(false);
     } 
-    // finally {
-    //   setLoading(false);
-    // }
   };
 
   const handleDeleteProject = async () => {

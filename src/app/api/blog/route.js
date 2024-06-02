@@ -1,4 +1,3 @@
-// import { Post } from "@/lib/models";
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -11,7 +10,6 @@ export async function GET(req) {
         isPublic: true,
       },
     });
-
     return NextResponse.json(posts, { status: 200 });
   } catch (error) {
     return NextResponse.json(
