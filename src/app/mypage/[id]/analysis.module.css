@@ -68,3 +68,7 @@
 .listItem {
   margin-bottom: 0.2em;
 }
+
+.noVulnerabilitiesMessage{
+  font-size: 20px;
+}

@@ -93,7 +93,7 @@ const MyPage = () => {
         },
       });
       console.log('업로드 성공:', response.data);
-      newProject.id = response.data.id; // 서버에서 반환된 파일 경로
+      newProject.id = response.data.id;
 
       const projectResponse = await axios.post('/api/project', {
         title: newProject.title,
