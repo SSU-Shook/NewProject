@@ -12,14 +12,12 @@
   white-space: normal;
 }
 
-/* Report */
 .reportMainTitle {
   font-size: 2.5em;
   margin-bottom: 1.5em;
   color: #111;
 }
 
-/* 분석 결과 */
 .reportTitle {
   font-size: 1.2em;
   margin-bottom: 1.5em;
