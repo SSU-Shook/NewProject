@@ -5,11 +5,13 @@ import axios from 'axios';
 import { ClipLoader } from 'react-spinners';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 const MyPage = () => {
   const [projects, setProjects] = useState([]);
   const [newTitle, setNewTitle] = useState('');
-  const [selectedVisibility, setSelectedVisibility] = useState('private');
+  const [selectedVisibility, setSelectedVisibility] = useState(false);
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ const MyPage = () => {
     const fetchProjects = async () => {
       if (!session) return;
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/project`, {
+        const response = await axios.get(`/api/project`, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
@@ -34,6 +36,23 @@ const MyPage = () => {
     };
     fetchProjects();
   }, [session]);
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      if (responseId) {
+        try {
+          await axios.get(`/api/analyze/?file_id=${responseId}`);
+        } catch (error) {
+          console.error('분석 요청 실패:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+  
+    fetchAnalysis();
+  }, [responseId]);
+  
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -56,7 +75,7 @@ const MyPage = () => {
     const newProject = {
       id: projects.length + 1,
       title: newTitle,
-      date: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString(),
       visibility: selectedVisibility
     };
 
@@ -66,17 +85,18 @@ const MyPage = () => {
     formData.append('visibility', selectedVisibility);
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/upload`, formData, {
+      setLoading(true);
+      const response = await axios.post(`/api/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',   
           Authorization: `Bearer ${session.accessToken}`, 
         },
       });
-      const projectResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/project`, {
+      const projectResponse = await axios.post(`/api/project`, {
         title: newProject.title,
-        path: String(newProject.id),
+        path: String(response.data.id),
         framework: "javascript",
-        isPublic: newProject.visibility === 'public',
+        isPublic: selectedVisibility,
         authorId: session.user.id,
       }, {
         headers: {
@@ -84,23 +104,29 @@ const MyPage = () => {
         },
       });
 
-      setProjects([...projects, { ...newProject, id: projectResponse.data.id }]);
+      const updatedProject = {
+        id: projectResponse.data.id,
+        title: newTitle,
+        updatedAt: new Date().toISOString(),
+        isPublic: selectedVisibility,
+        path: response.data.id,
+      };
+      
+      setProjects((prevProjects) => [...prevProjects, updatedProject]);
       setNewTitle('');
-      setSelectedVisibility('private');
+      setSelectedVisibility(false);
       setFile(null);
       setResponseId(response.data.id);
-      setLoading(true);
     } catch (error) {
       console.error('업로드 실패:', error.response ? error.response.data : error.message);
-    } finally {
       setLoading(false);
-    }
+    } 
   };
 
   const handleDeleteProject = async () => {
     for (let id of selectedProjectIds) {
       try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/project/${id}`, {
+        await axios.delete(`/api/project/${id}`, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
@@ -116,9 +142,9 @@ const MyPage = () => {
   const handleModifyProject = async () => {
     for (let id of selectedProjectIds) {
       try {
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/project/${id}`, {
+        await axios.put(`/api/project/${id}`, {
           title: newTitle || projects.find(project => project.id === id).title,
-          isPublic: selectedVisibility === 'public',
+          isPublic: selectedVisibility,
         }, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
@@ -136,7 +162,7 @@ const MyPage = () => {
     });
     setProjects(updatedProjects);
     setNewTitle('');
-    setSelectedVisibility('private');
+    setSelectedVisibility(false);
     setSelectedProjectIds([]);
   };
 
@@ -169,10 +195,10 @@ const MyPage = () => {
         />
         <select
           value={selectedVisibility}
-          onChange={(e) => setSelectedVisibility(e.target.value)}
+          onChange={(e) => setSelectedVisibility(e.target.value === 'true')}
         >
-          <option value="private">Private</option>
-          <option value="public">Public</option>
+          <option value="false">Private</option>
+          <option value="true">Public</option>
         </select>
         <input type="file" name="file" accept='.zip' onChange={handleFileChange} />
         {file && <p className={styles.selectedFile}>선택된 파일: {file.name}</p>}
@@ -192,11 +218,11 @@ const MyPage = () => {
             onClick={() => toggleProjectSelection(project.id)}
           >
             <h2>제목: {project.title}</h2>
-            <p>생성 날짜: {project.updatedAT}</p>
-            <p>공개 여부: {project.visibility === 'private' ? 'Private' : 'Public'}</p>
+            <p>생성 날짜: {format(parseISO(project.updatedAt), 'yyyy/MM/dd HH:mm', { locale: ko })}</p>
+            <p>공개 여부: {project.isPublic ? 'Public' : 'Private'}</p>
             <div className={styles.buttonGroup}>
               <button className={styles.button} onClick={() => handleViewAnalysis(Number(project.path))}>
-                {loading ? <ClipLoader size={24} color="red" /> : '분석 결과 보기'}
+              {loading && String(responseId) === String(project.path) ? <ClipLoader size={24} color="red" /> : '분석 결과 보기'}
               </button>
             </div>
           </div>
