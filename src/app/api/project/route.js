@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { revalidatePath } from "next/cache";
 
 const prisma = new PrismaClient();
 
@@ -21,6 +22,7 @@ export async function GET(req) {
       },
     });
 
+    revalidatePath("/mypage");
     return NextResponse.json(projects, { status: 200 });
   } catch (error) {
     return NextResponse.json(
